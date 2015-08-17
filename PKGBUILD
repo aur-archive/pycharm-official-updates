@@ -1,0 +1,49 @@
+# Maintainer: Andrey Vlasovskikh <andrey.vlasovskikh@gmail.com>
+pkgname=pycharm-official-updates
+_buildver=133.673
+_downloadver=professional-$_buildver
+pkgver=3.1b133.673
+pkgrel=1
+pkgdesc="PyCharm updated as official software update tool claims a new version is available, which is a mixture between stable an EAP (Early Access Program)"
+arch=('i686' 'x86_64')
+url="http://www.jetbrains.com/pycharm/"
+license=("custom")
+depends=("java-environment>=6")
+conflicts=("pycharm" "pycharm-eap")
+changelog="CHANGES"
+source=(pycharm.desktop pycharm.sh "http://download.jetbrains.com/python/pycharm-${_downloadver}.tar.gz")
+install=pycharm.install
+options=(!strip)
+
+build() {
+    cd "$srcdir"
+}
+
+package() {
+  cd "$srcdir"
+  
+  mkdir -p "$pkgdir"/usr/share/pycharm || return 1
+  cp -R "$srcdir"/pycharm-"$_buildver"/* "$pkgdir"/usr/share/pycharm || return 1
+  
+  # make sure that all files are owned by root
+  chown -R root:root "$pkgdir"/usr/share
+  
+  # Remove 32 bit files for 64 bit machine
+  if [[ $CARCH = 'i686' ]]; then
+     rm -f "$pkgdir"/usr/share/pycharm/bin/libyjpagent-linux64.so
+     rm -f "$pkgdir"/usr/share/pycharm/bin/fsnotifier64
+  fi
+  
+  mkdir -p "$pkgdir"/usr/share/licenses/pycharm/ || return 1
+  install -m 644 "$srcdir"/pycharm-"$_buildver"/license/PyCharm_license.txt "$pkgdir"/usr/share/licenses/pycharm/PyCharm_license.txt
+  
+  install -D -m755 "$srcdir"/pycharm.sh "$pkgdir"/usr/bin/pycharm.sh
+  install -D -m644 "$srcdir"/pycharm.desktop "$pkgdir"/usr/share/applications/pycharm.desktop
+  install -D -m644 "$pkgdir"/usr/share/pycharm/bin/pycharm.png \
+                   "$pkgdir"/usr/share/pixmaps/pycharm.png
+  
+}
+
+md5sums=('11948fe9fa2bb50e401404e8248da1d9'
+         'f72df0a7f5025398ec6f94294ae6cd7d'
+         '5f72b72f5d224af718331b63c9050ee4')
